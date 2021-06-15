@@ -12,8 +12,7 @@ import (
 	ll "github.com/emirpasic/gods/lists/singlylinkedlist"
 	"github.com/gin-gonic/gin"
 )
-var lock sync.Mutex
-var timerCounter = 0
+
 func (r *Raft) heartBeat(context *gin.Context) {
 	if r.State == LEADER {
 		r.log("i am leader, cannot receive heartbeat")
@@ -42,7 +41,6 @@ var getPeers = func() *ll.List{
 			list.Add("http://localhost:" + strconv.Itoa(n))
 		}
 	}
-	fmt.Println("Total peers - ", list.Values())
 	return list
 }
 
@@ -71,7 +69,6 @@ func (r *Raft) UpdateChange(w string) {
 		for it.Next() {
 			_, url := it.Index(), it.Value()
 			u := fmt.Sprintf("%v", url)
-			fmt.Println("lol - ", u, r.Leader)
 			if strings.Contains(u, r.Leader) { // inform only leader
 				request(fmt.Sprintf("%v%s", url,w),nil)
 				return
@@ -86,7 +83,6 @@ func (r *Raft) StartElection(){
 }
 
 func (r *Raft) startHeartbeat(){
-	fmt.Println("I am the LEADER")
 	for {
 		it := r.Peers.Iterator()
 		time.Sleep(electionTimeout * time.Millisecond)
@@ -134,7 +130,6 @@ func (r *Raft)vote(context *gin.Context) {
 		return
 	}else if req.Data.TermCount == r.SelfTermCount {
 		// tie breaker based on source
-		fmt.Println("what ", req.Data.Source, r.SelfId)
 		if strings.Compare(req.Data.Source, r.SelfId) > 0{
 			r.CommChannels.electionTimeoutChan <- true // end my election if any
 			r.Leader = req.Data.Source
@@ -153,7 +148,6 @@ func (r *Raft)vote(context *gin.Context) {
 }
 func (r *Raft)mod(context *gin.Context) {
 	action := context.Query("action")
-	r.log(action)
 	rsp := []byte("Error")
 	key, value := context.Query("key"),context.Query("value")
 	if strings.Compare("set", action)==0{
@@ -184,10 +178,6 @@ func (r *Raft)set(context *gin.Context) {
 }
 
 func (r *Raft) startElection() bool{
-	
-	timerCounter = 0
-	lock = sync.Mutex{}
-	
 	r.State = CANDIDATE
 	// todo -> move term count update to after being elected?
 	
@@ -212,7 +202,7 @@ func (r *Raft) startElection() bool{
 		go r.startHeartbeat()
 		return true
 	}else {
-		fmt.Println("restarting election")
+		r.log("restarting election")
 		return false
 	}
 }

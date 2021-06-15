@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	
 	raft2 "ishan/dxxxxx/RedissDB/raft"
+	"ishan/dxxxxx/RedissDB/term"
 )
 var upgrade = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -63,14 +64,17 @@ func main(){
 	raft := raft2.Init(port)
 	
 	go raft.StartElection()
+	go func() {
+		// web socket for clients to access DB
+		http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+			serveWs(raft, w, r)
+		})
+		fmt.Println("\nRediss DB \tWS server - ", wsAddr)
+		err = http.ListenAndServe(wsAddr, nil)
+		if err != nil {
+			log.Fatal("ListenAndServe: ", err)
+		}
+	}()
+	term.Start(raft)
 	
-	// web socket for clients to access DB
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		serveWs(raft, w, r)
-	})
-	fmt.Println("\nRediss DB \tWS server - ", wsAddr)
-	err = http.ListenAndServe(wsAddr, nil)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
-	}
 }
