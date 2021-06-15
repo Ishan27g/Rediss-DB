@@ -49,26 +49,14 @@ var getPeers = func() *ll.List{
 
 func (r *Raft) startTimer() {
 	r.Following = true
-	// r.CommChannels.electionTimeoutChan <- true
-	// r.log("Starting Heartbeat expectation timer")
-	lock.Lock()
-	timerCounter++
-	lock.Unlock()
 	randomDelay := time.Duration(electionTimeout + randomInt())
-	// fmt.Println("\t\t\tTimers running - ", timerCounter)
 	select {
 	case <-time.After(randomDelay * time.Millisecond):
-		// r.log("Starting Election")
 		r.startElection()
 		break
 	case <-r.CommChannels.heartBeatTimeoutChan :
-		// r.log("Stopping Heartbeat expectation timer")
 		break
 	}
-	lock.Lock()
-	timerCounter--
-	lock.Unlock()
-	// fmt.Println("\t\t\tTimer Exit - ", timerCounter)
 }
 
 func (r *Raft) UpdateChange(w string) {
@@ -113,24 +101,14 @@ func (r *Raft)timeoutLeader(flag int) {
 	if r.State != CANDIDATE && flag == 0{
 		return
 	}
-	lock.Lock()
-	timerCounter++
-	lock.Unlock()
 	randomDelay := time.Duration(electionTimeout + randomInt())
-	// fmt.Println("\t\t\tTimer running - ", timerCounter)
 	select {
 	case <-time.After(randomDelay * time.Millisecond):
-		// r.log("Starting Election")
 		r.startElection()
 		break
 	case <-r.CommChannels.electionTimeoutChan :
-		// r.log("Stopping Election Timer")
 		break
 	}
-	lock.Lock()
-	timerCounter--
-	lock.Unlock()
-	// fmt.Println("\t\t\tTimer Exit - ", timerCounter)
 }
 func (r *Raft)vote(context *gin.Context) {
 	if r.State == LEADER {
@@ -214,7 +192,6 @@ func (r *Raft) startElection() bool{
 	// todo -> move term count update to after being elected?
 	
 	r.SelfTermCount++
-	// go r.Rediss.Set(r.SelfId, strconv.Itoa(r.SelfTermCount))
 	
 	it := r.Peers.Iterator()
 	votes := 0
@@ -232,12 +209,10 @@ func (r *Raft) startElection() bool{
 	if votes == r.Peers.Size() {
 		r.log("Elected leader")
 		r.State = LEADER
-		// r.CommChannels.electionTimeoutChan <- true // in case still running
 		go r.startHeartbeat()
 		return true
 	}else {
 		fmt.Println("restarting election")
-		// r.timeoutLeader(0)
 		return false
 	}
 }

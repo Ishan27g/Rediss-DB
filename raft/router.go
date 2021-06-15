@@ -76,13 +76,6 @@ func(r *Raft)LaunchChangeWorker() {
 	}
 }
 func (r *Raft) setRoutes() {
-	// client -> set a value
-	// only Leader can use this method
-	// r.G.POST("/modify", r.mod) // set?key=&val=
-	
-	// only Candidates can use this method
-	r.G.GET("/set", r.set) // set?key=&val=
-	r.G.GET("/get", r.get) // get?key=
 	
 	// election candidate asks votes from peers
 	r.G.POST("/voteReq", r.vote)
@@ -90,27 +83,27 @@ func (r *Raft) setRoutes() {
 	
 	// peers sends on local change
 	r.G.GET("/peerChange", r.mod) // with params
+	
+	// r.G.GET("/set", r.set) // set?key=&val=
+	r.G.GET("/get", r.get) // get?key=
+	
 }
 
 func (r *Raft) InformPeers(m []byte){
 	msg := string(m)
-	fmt.Println("Leader informing peers - ", msg)
 	switch msg[0] {
 	case '>':
-		fmt.Println("Inform Peers Add - " , msg[1:])
 		if key := strings.Split(msg[1:],"="); len(key) == 2 {
 			url := "/peerChange?action=set&key="+key[0]+"&value="+key[1]
 			r.UpdateChange(url)
 		}
 	case '-':
-		fmt.Println("Inform Peers Delete - " , msg[1:])
 			url := "/peerChange?action=delete&key="+msg[1:]
 			r.UpdateChange(url)
 	}
 }
 
 var request =  func (url string, data interface{}) (*VoteResp, int){
-	fmt.Println("Informing Peer - ", url)
 	var resp *http.Response
 	var err error
 	values := data
@@ -131,7 +124,6 @@ var request =  func (url string, data interface{}) (*VoteResp, int){
 	}
 	var res VoteResp
 	_ = json.NewDecoder(resp.Body).Decode(&res)
-	// fmt.Println(res["data"])
 	return &res, resp.StatusCode
 }
 

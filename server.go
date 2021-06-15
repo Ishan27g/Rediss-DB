@@ -36,18 +36,13 @@ var serveWs = func(raft *raft2.Raft,
 		}
 		
 		if raft.State == raft2.LEADER {
-			// inform peers of change
 			raft.InformPeers(p)
-			// raft.CommChannels.ChangeWorker.JobC <- string(p)
-			// do local update
 			if err := conn.WriteMessage(messageType, d.HandleReq(p)); err != nil {
 				log.Println(err)
 				return
 			}
 		}else if raft.State == raft2.FOLLOWER{
-			// inform Leader
 			raft.InformPeers(p)
-			// tell client it will be committed
 			if err := conn.WriteMessage(messageType, []byte("Ok...")); err != nil {
 				log.Println(err)
 				return
@@ -65,11 +60,9 @@ func main(){
 	port, _ := strconv.Atoi(os.Getenv("PEER"+os.Getenv("INSTANCE"))[1:])
 	port = port + 10
 	
-	// d:= dataManager.Init()
 	raft := raft2.Init(port)
 	
 	go raft.StartElection()
-	// go raft.LaunchChangeWorker()
 	
 	// web socket for clients to access DB
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {

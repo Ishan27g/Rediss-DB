@@ -1,24 +1,20 @@
-All replicas available via Websocket -
+### All replicas available via Web socket 
+```text
 - ws://localhost:9001/ws
 - ws://localhost:9003/ws
 - ws://localhost:9003/ws
+```
 
-## Commands
-#### Add [>]
+### Commands
+#### Add : >Key=Value 
 ```text
->Key=Value
- eg.
->ID=123
+>ID=123 {"ID" : "123"}
 ```
-#### Get [<]
+#### Get : <Key
 ```text
-<Key
- eg.
-<ID
+<ID // {"ID" : "123"}
 ```
-#### Delete [-]
+#### Delete : -KEY
 ```text
--Key
- eg.
--ID
+-ID // {"Ok"}
 ```
