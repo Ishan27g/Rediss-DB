@@ -1,4 +1,4 @@
-### All replicas available via Web socket 
+### All replicas available via Web socket or commandline
 ```text
 - ws://localhost:9001/ws
 - ws://localhost:9003/ws
