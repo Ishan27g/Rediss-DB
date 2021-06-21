@@ -1,0 +1,7 @@
+module ishan dxxxxx RedissDB
+go require
+require
+github.com/emirpasic/gods require
+github.com/gin-gonic/gin
+github.com/gorilla/websocket require
+github.com/joho/godotenv
